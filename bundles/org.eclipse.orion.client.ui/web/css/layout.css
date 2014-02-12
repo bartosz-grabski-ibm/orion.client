@@ -432,7 +432,7 @@ hard-coded numbers elsewhere.
     top: 36px;
 	/* bottom: 36px; $FooterHeight + footer border (1px) */   
     bottom: 0;
-    z-index: 0;
+    /*z-index: 0;*/
     -webkit-animation: slide 0.5s forwards;
     -webkit-animation-delay: 2s;
     animation: slide 0.5s forwards;
@@ -445,8 +445,8 @@ hard-coded numbers elsewhere.
 	border-right:1px solid #ccc;
 }
 
-.sideMenu:hover{
-	z-index: 100;
+.sideMenu.animating {
+	z-index: 0;
 }
 
 .sideMenu-maximized {
@@ -470,7 +470,7 @@ hard-coded numbers elsewhere.
 	padding: 0;
 }
 
-.sideMenuItem:hover{
+.sideMenuItem:hover, .expanded {
 	text-decoration:none;
 	color:white !important;
 }
@@ -483,7 +483,8 @@ hard-coded numbers elsewhere.
 	display: inline-block;
 	padding: 9px 0px 12px 0px;
 }
-.sideMenuItem>a:hover{
+/* no dont */
+.sideMenuItem>a:hover, .sideMenuItem.expanded>a{
 	text-decoration:none;
 	color:white !important;
 }
@@ -589,7 +590,12 @@ hard-coded numbers elsewhere.
 	display: inline-block;
 }
 
-.sideMenuItem:hover ul { 
+/* TODO don't use :hover for this? confusin
+ * TODO qualify .expanded as .sideMenuItem.expanded
+ * TODO try focus here for keyboard a11y:
+.sideMenuItem>a:focus + .sideMenuSubMenu, 
+ */
+.sideMenuItem:hover .sideMenuSubMenu, .expanded .sideMenuSubMenu { 
     display:inline-block;
 }
 

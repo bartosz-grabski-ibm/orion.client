@@ -21,6 +21,10 @@ define([
 	'orion/URL-shim'
 ], function(mCommands, objects, lib, PageLinks, PageUtil, URITemplate, _) {
 
+	function isMenuItem(t) {
+		return t.tagName === "A" && t.parentNode.classList.contains("sideMenuItem"); //$NON-NLS-0$
+	}
+
 	function SideMenu(parentNode, contentNode){
 		this.parentNode = lib.node(parentNode);
 		this.contentNode = lib.node(contentNode);
@@ -31,9 +35,33 @@ define([
 		this.links = null;
 		this.categories = null;
 
-		this.anchor = document.createElement("ul");
-		this.anchor.classList.add("sideMenuList");
+		this.anchor = document.createElement("ul"); //$NON-NLS-0$
+		this.anchor.classList.add("sideMenuList"); //$NON-NLS-0$
 		this.parentNode.appendChild(this.anchor);
+
+		var _self = this;
+		var handleTouch = function(e) {
+			var target = e.target;
+			if (isMenuItem(e.target)) { //$NON-NLS-1$ //$NON-NLS-0$
+				e.preventDefault();
+
+				// Un-expand every other menu item
+				var touchedMenuItem = target.parentNode;
+				_self.getMenuItems().forEach(function(item) {
+					if (item === touchedMenuItem)
+						return;
+					item.classList.remove("expanded"); //$NON-NLS-0$
+				});
+				// Toggle expansion state of the touched menu item
+				touchedMenuItem.classList.toggle("expanded"); //$NON-NLS-0$
+			}
+		}, dontTouch = function(e) {
+			if (isMenuItem(e.target))
+				e.preventDefault();
+		};
+		this.anchor.addEventListener("touchstart", handleTouch); //$NON-NLS-0$
+		this.anchor.addEventListener("move", dontTouch); //$NON-NLS-0$
+		this.anchor.addEventListener("touchend", dontTouch); //$NON-NLS-0$
 	}
 	objects.mixin(SideMenu.prototype, {
 		LOCAL_STORAGE_NAME: "sideMenuNavigation",
@@ -84,6 +112,7 @@ define([
 					this._timeout = window.setTimeout(function() {
 						parent.style.display = 'none'; //$NON-NLS-0$
 					}, this.TRANSITION_DURATION_MS);
+					parent.classList.add("animating"); //$NON-NLS-0$
 				}
 				
 				if( sideMenuNavigation === this.OPEN_STATE ){
@@ -91,6 +120,7 @@ define([
 						window.clearTimeout(this._timeout);
 						this._timeout = null;
 					}
+					parent.classList.remove("animating"); //$NON-NLS-0$
 					parent.style.display = 'block'; //$NON-NLS-0$
 					parent.style.width = this.SIDE_MENU_OPEN_WIDTH;
 					this.setPageContentLeft(this.SIDE_MENU_OPEN_WIDTH);
@@ -296,12 +326,7 @@ define([
 				}
 
 				// First link becomes the icon link
-				var category = _self.categories.getCategory(catId);
-				var link = document.createElement("a");
-				link.href = bin[0].href;
-				link.className = category.imageClass;
-				menuitem.classList.remove(category.imageClass);
-				menuitem.appendChild(link);
+				menuitem.appendChild(_self._createCategoryLink(catId, menuitem, bin[0]));
 
 				// Links go into submenu
 				var sideMenuSubMenu = document.createElement('ul');
@@ -326,6 +351,14 @@ define([
 				});
 				menuitem.appendChild(sideMenuSubMenu);
 			});
+		},
+		_createCategoryLink: function(catId, menuitem, linkElement) {
+			var category = this.categories.getCategory(catId);
+			var link = document.createElement("a");
+			link.href = linkElement.href;
+			link.className = category.imageClass;
+			menuitem.classList.remove(category.imageClass); // remove icon from menuitem; on link instead
+			return link;
 		}
 	});
 
